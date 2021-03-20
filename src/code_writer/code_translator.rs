@@ -41,6 +41,13 @@ impl CodeTranslator {
             vec![]
         }
     }
+    pub fn push_constant(&self, constant: i32) -> Vec<String> {
+        let mut result: Vec<String> = vec![];
+        result.extend(vec![format!("@{}", constant)]);
+        result.extend(vec!["D=A".to_string()]);
+        result.extend(push_d());
+        result
+    }
     fn exec_1arg_arithmetic(&self, arithmetic_type: &ArithmeticType) -> Vec<String> {
         match arithmetic_type {
             ArithmeticType::NEG => vec!["D=-M".to_string()],

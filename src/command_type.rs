@@ -14,6 +14,7 @@ pub enum CommandType {
     NONE,
 }
 
+#[derive(Debug)]
 pub enum ArithmeticType {
     // 2 arg
     ADD,
