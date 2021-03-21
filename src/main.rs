@@ -21,14 +21,17 @@ struct Opts {
 fn main() {
     let opts = Opts::parse();
     
-    let mut code_writer = CodeWriter::new("hoge.asm");
     let mut parser = Parser::new(&opts.vm_source);
+
+    let output_file_name = format!("{}.asm", opts.vm_source.split('.').next().unwrap());
+    let mut code_writer = CodeWriter::new(&output_file_name);
 
     while parser.advance() {
         let command_type = parser.command_type();
         match command_type {
             CommandType::C_ARITHMETIC => code_writer.write_arithmetic(&parser.arithmetic_type()),
-            CommandType::C_PUSH => code_writer.write_push_pop(&parser.get_arg(1).unwrap(), parser.get_arg(2).unwrap().parse::<i32>().unwrap()),
+            CommandType::C_PUSH => code_writer.write_push(&parser.get_arg(1).unwrap(), parser.get_arg(2).unwrap().parse::<i32>().unwrap()),
+            CommandType::C_POP => code_writer.write_pop(&parser.get_arg(1).unwrap(), parser.get_arg(2).unwrap().parse::<usize>().unwrap()),
             _ => {}
         }
         println!("{:?}", command_type);

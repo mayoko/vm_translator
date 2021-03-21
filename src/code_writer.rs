@@ -6,8 +6,7 @@ use code_translator::{CodeTranslator, initial_command};
 
 pub struct CodeWriter {
     code_translator: CodeTranslator,
-    file_writer: BufWriter<File>,
-    vm_file_name: String
+    file_writer: BufWriter<File>
 }
 
 impl CodeWriter {
@@ -16,21 +15,24 @@ impl CodeWriter {
         let mut code_writer = CodeWriter {
             code_translator: CodeTranslator::new(),
             file_writer: BufWriter::new(f),
-            vm_file_name: "".to_string()
         };
         // write initial command
         code_writer.write_commands(&initial_command());
         code_writer
     }
     pub fn set_file_name(&mut self, file_name: &str) {
-        self.vm_file_name = file_name.to_string();
+        self.code_translator.set_file_name(file_name);
     }
     pub fn write_arithmetic(&mut self, arithmetic_type: &ArithmeticType) {
         let assembly_commands = self.code_translator.translate_arithmetic(arithmetic_type);
         self.write_commands(&assembly_commands);
     }
-    pub fn write_push_pop(&mut self, segment: &str, index: i32) {
-        let assembly_commands = self.code_translator.push_constant(index);
+    pub fn write_push(&mut self, segment: &str, index: i32) {
+        let assembly_commands = self.code_translator.translate_push(segment, index);
+        self.write_commands(&assembly_commands);
+    }
+    pub fn write_pop(&mut self, segment: &str, index: usize) {
+        let assembly_commands = self.code_translator.translate_pop(segment, index);
         self.write_commands(&assembly_commands);
     }
     fn write_commands(&mut self, assembly_commands: &Vec<String>) {
