@@ -65,6 +65,17 @@ impl CodeTranslator {
             self.pop_register(segment, index)
         }
     }
+    pub fn translate_label(&self, label: &str) -> Vec<String> {
+        vec![format!("({})", label)]
+    }
+    pub fn translate_goto(&self, label: &str) -> Vec<String> {
+        vec![format!("@{}", label), "0;JMP".to_string()]
+    }
+    pub fn translate_if_goto(&self, label: &str) -> Vec<String> {
+        vec!["@SP", "M=M-1", "A=M", "D=M", &format!("@{}", label), "D;JNE"]
+            .iter().map(|command| command.to_string()).collect()
+    }
+
     fn exec_1arg_arithmetic(&self, arithmetic_type: &ArithmeticType) -> Vec<String> {
         match arithmetic_type {
             ArithmeticType::NEG => vec!["D=-M".to_string()],

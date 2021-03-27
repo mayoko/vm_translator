@@ -32,6 +32,9 @@ fn main() {
             CommandType::C_ARITHMETIC => code_writer.write_arithmetic(&parser.arithmetic_type()),
             CommandType::C_PUSH => code_writer.write_push(&parser.get_arg(1).unwrap(), parser.get_arg(2).unwrap().parse::<i32>().unwrap()),
             CommandType::C_POP => code_writer.write_pop(&parser.get_arg(1).unwrap(), parser.get_arg(2).unwrap().parse::<usize>().unwrap()),
+            CommandType::C_LABEL => code_writer.write_label(&parser.get_arg(1).unwrap()),
+            CommandType::C_GOTO => code_writer.write_goto(&parser.get_arg(1).unwrap()),
+            CommandType::C_IF => code_writer.write_if_goto(&parser.get_arg(1).unwrap()),
             _ => {}
         }
         println!("{:?}", command_type);

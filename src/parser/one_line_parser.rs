@@ -25,6 +25,18 @@ pub fn command_type(line: &str) -> CommandType {
     if regex_pop.is_match(line) {
         return CommandType::C_POP;
     }
+    let regex_label = Regex::new(r"^label [a-zA-Z_]+[a-zA-Z_.:0-9]*$").unwrap();
+    if regex_label.is_match(line) {
+        return CommandType::C_LABEL;
+    }
+    let regex_goto = Regex::new(r"^goto [a-zA-Z_]+[a-zA-Z_.:0-9]*$").unwrap();
+    if regex_goto.is_match(line) {
+        return CommandType::C_GOTO;
+    }
+    let regex_if_goto = Regex::new(r"^if-goto [a-zA-Z_]+[a-zA-Z_.:0-9]*$").unwrap();
+    if regex_if_goto.is_match(line) {
+        return CommandType::C_IF;
+    }
     CommandType::NONE
 }
 
@@ -54,7 +66,7 @@ pub fn arithmetic_type(line: &str) -> ArithmeticType {
 
 pub fn get_arg(line: &str, index: usize) -> Option<String> {
     match command_type(line) {
-        CommandType::C_PUSH | CommandType::C_POP => {
+        CommandType::C_PUSH | CommandType::C_POP | CommandType::C_LABEL | CommandType::C_GOTO | CommandType::C_IF => {
             line.split(' ').collect::<Vec<&str>>().get(index).map(|v| v.to_string())
         },
         _ => None

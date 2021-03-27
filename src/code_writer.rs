@@ -35,6 +35,18 @@ impl CodeWriter {
         let assembly_commands = self.code_translator.translate_pop(segment, index);
         self.write_commands(&assembly_commands);
     }
+    pub fn write_label(&mut self, label: &str) {
+        let assembly_commands = self.code_translator.translate_label(label);
+        self.write_commands(&assembly_commands);
+    }
+    pub fn write_goto(&mut self, label: &str) {
+        let assembly_commands = self.code_translator.translate_goto(label);
+        self.write_commands(&assembly_commands);
+    }
+    pub fn write_if_goto(&mut self, label: &str) {
+        let assembly_commands = self.code_translator.translate_if_goto(label);
+        self.write_commands(&assembly_commands);
+    }
     fn write_commands(&mut self, assembly_commands: &Vec<String>) {
         for command in assembly_commands {
             self.file_writer.write(command.as_bytes()).unwrap();
