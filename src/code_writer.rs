@@ -17,7 +17,7 @@ impl CodeWriter {
             file_writer: BufWriter::new(f),
         };
         // write initial command
-        code_writer.write_commands(&initial_command());
+        // code_writer.write_commands(&initial_command());
         code_writer
     }
     pub fn set_file_name(&mut self, file_name: &str) {
@@ -45,6 +45,18 @@ impl CodeWriter {
     }
     pub fn write_if_goto(&mut self, label: &str) {
         let assembly_commands = self.code_translator.translate_if_goto(label);
+        self.write_commands(&assembly_commands);
+    }
+    pub fn write_function(&mut self, function_name: &str, local_val_num: usize) {
+        let assembly_commands = self.code_translator.translate_function(function_name, local_val_num);
+        self.write_commands(&assembly_commands);
+    }
+    pub fn write_call(&mut self, function_name: &str, arg_num: usize) {
+        let assembly_commands = self.code_translator.translate_call(function_name, arg_num);
+        self.write_commands(&assembly_commands);
+    }
+    pub fn write_return(&mut self) {
+        let assembly_commands = self.code_translator.translate_return();
         self.write_commands(&assembly_commands);
     }
     fn write_commands(&mut self, assembly_commands: &Vec<String>) {

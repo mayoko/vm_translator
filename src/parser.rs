@@ -6,7 +6,8 @@ use crate::command_type::{CommandType, ArithmeticType};
 
 pub struct Parser {
     line_iter: Lines<BufReader<File>>,
-    current_line: String
+    current_line: String,
+    current_function_name: String
 }
 
 impl Parser {
@@ -15,7 +16,8 @@ impl Parser {
         let reader = BufReader::new(f);
         Parser {
             line_iter: reader.lines(),
-            current_line: String::new()
+            current_line: String::new(),
+            current_function_name: "".to_string()
         }
     }
 
@@ -28,11 +30,19 @@ impl Parser {
             Some(result) => match result {
                 Ok(line) => {
                     self.current_line = normalize(&line);
+                    match self.command_type() {
+                        CommandType::C_FUNCTION => self.current_function_name = self.get_arg(1).unwrap(),
+                        _ => {}
+                    }
                 }
                 _ => return false
             }
         }
         true
+    }
+
+    pub fn get_function_name(&self) -> &str {
+        &self.current_function_name
     }
 
     pub fn command_type(&self) -> CommandType {

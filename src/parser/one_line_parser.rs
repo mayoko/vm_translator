@@ -37,6 +37,17 @@ pub fn command_type(line: &str) -> CommandType {
     if regex_if_goto.is_match(line) {
         return CommandType::C_IF;
     }
+    let regex_function = Regex::new(r"^function [a-zA-Z_]+[a-zA-Z_.:0-9]* [0-9]+$").unwrap();
+    if regex_function.is_match(line) {
+        return CommandType::C_FUNCTION;
+    }
+    let regex_call = Regex::new(r"^call [a-zA-Z_]+[a-zA-Z_.:0-9]* [0-9]+$").unwrap();
+    if regex_function.is_match(line) {
+        return CommandType::C_CALL;
+    }
+    if line == "return" {
+        return CommandType::C_RETURN;
+    }
     CommandType::NONE
 }
 
@@ -65,10 +76,5 @@ pub fn arithmetic_type(line: &str) -> ArithmeticType {
 }
 
 pub fn get_arg(line: &str, index: usize) -> Option<String> {
-    match command_type(line) {
-        CommandType::C_PUSH | CommandType::C_POP | CommandType::C_LABEL | CommandType::C_GOTO | CommandType::C_IF => {
-            line.split(' ').collect::<Vec<&str>>().get(index).map(|v| v.to_string())
-        },
-        _ => None
-    }
+    line.split(' ').collect::<Vec<&str>>().get(index).map(|v| v.to_string())
 }

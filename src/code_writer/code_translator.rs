@@ -2,6 +2,7 @@ use crate::command_type::{ArithmeticType, CommandType, is_1arg_arithmetic, is_2a
 
 pub struct CodeTranslator {
     goto_label_num: u32,
+    return_address_num: u32,
     vm_file_name: String,
 }
     
@@ -17,6 +18,11 @@ fn push_d() -> Vec<String> {
         .map(|command| command.to_string())
         .collect()
 }
+fn push_val(val_name: &str) -> Vec<String> {
+    let mut result = vec![format!("@{}", val_name), "D=A".to_string()];
+    result.extend(push_d());
+    result
+}
 
 pub fn initial_command() -> Vec<String> {
     vec!["@256", "D=A", "@SP", "M=D"].iter().map(|command| command.to_string()).collect()
@@ -24,7 +30,7 @@ pub fn initial_command() -> Vec<String> {
 
 impl CodeTranslator {
     pub fn new() -> Self {
-        CodeTranslator {goto_label_num: 0, vm_file_name: "".to_string()}
+        CodeTranslator {goto_label_num: 0, return_address_num: 0, vm_file_name: "".to_string()}
     }
     pub fn set_file_name(&mut self, file_name: &str) {
         self.vm_file_name = file_name.to_string();
@@ -74,6 +80,49 @@ impl CodeTranslator {
     pub fn translate_if_goto(&self, label: &str) -> Vec<String> {
         vec!["@SP", "M=M-1", "A=M", "D=M", &format!("@{}", label), "D;JNE"]
             .iter().map(|command| command.to_string()).collect()
+    }
+    pub fn translate_function(&self, function_name: &str, local_val_num: usize) -> Vec<String> {
+        let mut result = vec![format!("({})", function_name)];
+        for _ in 0..local_val_num {
+            result.extend(vec!["@0".to_string(), "D=A".to_string()]);
+            result.extend(push_d());
+        }
+        result
+    }
+    pub fn translate_call(&mut self, function_name: &str, arg_num: usize) -> Vec<String> {
+        let mut result = push_val(&format!("RETURN_ADDRESS_{}", self.return_address_num));
+        result.extend(push_val("LCL"));
+        result.extend(push_val("ARG"));
+        result.extend(push_val("THIS"));
+        result.extend(push_val("THAT"));
+        result.extend(vec!["@SP".to_string(), format!("D=M-{}", arg_num + 5), "@ARG".to_string(), "M=D".to_string()]);
+        result.extend(vec!["@SP", "D=M", "@LCL", "M=D"].iter().map(|command| command.to_string()));
+        result.extend(self.translate_goto(&format!("RETURN_ADDRESS_{}", self.return_address_num)));
+        result.push(format!("(RETURN_ADDRESS_{})", self.return_address_num));
+
+        self.return_address_num += 1;
+        result
+    }
+    pub fn translate_return(&mut self) -> Vec<String> {
+        // FRAME = LCL (R13 is FLAME)
+        let mut result: Vec<String> = vec!["@LCL", "D=M", "@R13", "M=D"].iter().map(|command| command.to_string()).collect();
+        let lambda = |to: &str, offset: usize| -> Vec<String> {
+            vec!["@R13", "D=M", &format!("@{}", offset), "A=D-A", "D=M", &format!("@{}", to), "M=D"]
+                .iter().map(|command| command.to_string()).collect::<Vec<String>>()
+        };
+        // RET = *(FRAME-5) R14 is RET
+        result.extend(lambda("R14", 5));
+        result.extend(pop("R15"));
+        result.extend(vec!["@R15", "D=M", "@ARG", "A=M", "M=D"].iter().map(|command| command.to_string()).collect::<Vec<String>>());
+        // SP = ARG+1
+        result.extend(vec!["@ARG", "D=M+1", "@SP", "M=D"].iter().map(|command| command.to_string()).collect::<Vec<String>>());
+        result.extend(lambda("THAT", 1));
+        result.extend(lambda("THIS", 2));
+        result.extend(lambda("ARG", 3));
+        result.extend(lambda("LCL", 4));
+        // goto RET
+        result.extend(vec!["@R14", "A=M", "0;JMP"].iter().map(|command| command.to_string()).collect::<Vec<String>>());
+        result
     }
 
     fn exec_1arg_arithmetic(&self, arithmetic_type: &ArithmeticType) -> Vec<String> {
