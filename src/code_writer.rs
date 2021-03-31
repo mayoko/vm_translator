@@ -1,8 +1,8 @@
 use std::io::{BufWriter, Write};
 use std::fs::{File};
-use crate::command_type::{CommandType, ArithmeticType};
+use crate::command_type::{ArithmeticType};
 mod code_translator;
-use code_translator::{CodeTranslator, initial_command};
+use code_translator::{CodeTranslator};
 
 pub struct CodeWriter {
     code_translator: CodeTranslator,
@@ -16,8 +16,8 @@ impl CodeWriter {
             code_translator: CodeTranslator::new(),
             file_writer: BufWriter::new(f),
         };
-        // write initial command
-        // code_writer.write_commands(&initial_command());
+        let assembly_commands = code_writer.code_translator.initial_command();
+        code_writer.write_commands(&assembly_commands);
         code_writer
     }
     pub fn set_file_name(&mut self, file_name: &str) {

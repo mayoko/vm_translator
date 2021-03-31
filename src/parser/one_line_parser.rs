@@ -42,7 +42,7 @@ pub fn command_type(line: &str) -> CommandType {
         return CommandType::C_FUNCTION;
     }
     let regex_call = Regex::new(r"^call [a-zA-Z_]+[a-zA-Z_.:0-9]* [0-9]+$").unwrap();
-    if regex_function.is_match(line) {
+    if regex_call.is_match(line) {
         return CommandType::C_CALL;
     }
     if line == "return" {

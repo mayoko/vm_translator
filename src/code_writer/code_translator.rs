@@ -1,4 +1,4 @@
-use crate::command_type::{ArithmeticType, CommandType, is_1arg_arithmetic, is_2arg_arithmetic};
+use crate::command_type::{ArithmeticType, is_1arg_arithmetic, is_2arg_arithmetic};
 
 pub struct CodeTranslator {
     goto_label_num: u32,
@@ -19,18 +19,19 @@ fn push_d() -> Vec<String> {
         .collect()
 }
 fn push_val(val_name: &str) -> Vec<String> {
-    let mut result = vec![format!("@{}", val_name), "D=A".to_string()];
+    let mut result = vec![format!("@{}", val_name), "D=M".to_string()];
     result.extend(push_d());
     result
-}
-
-pub fn initial_command() -> Vec<String> {
-    vec!["@256", "D=A", "@SP", "M=D"].iter().map(|command| command.to_string()).collect()
 }
 
 impl CodeTranslator {
     pub fn new() -> Self {
         CodeTranslator {goto_label_num: 0, return_address_num: 0, vm_file_name: "".to_string()}
+    }
+    pub fn initial_command(&mut self) -> Vec<String> {
+        let mut result = vec!["@256", "D=A", "@SP", "M=D"].iter().map(|command| command.to_string()).collect::<Vec<String>>();
+        result.extend(self.translate_call("Sys.init", 0));
+        result
     }
     pub fn set_file_name(&mut self, file_name: &str) {
         self.vm_file_name = file_name.to_string();
@@ -90,14 +91,15 @@ impl CodeTranslator {
         result
     }
     pub fn translate_call(&mut self, function_name: &str, arg_num: usize) -> Vec<String> {
-        let mut result = push_val(&format!("RETURN_ADDRESS_{}", self.return_address_num));
+        let mut result = vec![format!("@RETURN_ADDRESS_{}", self.return_address_num), "D=A".to_string()];
+        result.extend(push_d());
         result.extend(push_val("LCL"));
         result.extend(push_val("ARG"));
         result.extend(push_val("THIS"));
         result.extend(push_val("THAT"));
-        result.extend(vec!["@SP".to_string(), format!("D=M-{}", arg_num + 5), "@ARG".to_string(), "M=D".to_string()]);
+        result.extend(vec!["@SP".to_string(), "D=M".to_string(), format!("@{}", arg_num + 5), "D=D-A".to_string(), "@ARG".to_string(), "M=D".to_string()]);
         result.extend(vec!["@SP", "D=M", "@LCL", "M=D"].iter().map(|command| command.to_string()));
-        result.extend(self.translate_goto(&format!("RETURN_ADDRESS_{}", self.return_address_num)));
+        result.extend(self.translate_goto(function_name));
         result.push(format!("(RETURN_ADDRESS_{})", self.return_address_num));
 
         self.return_address_num += 1;
